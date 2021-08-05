@@ -1,0 +1,408 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <tuple>
+using namespace std;
+
+template <class T>
+void display1(vector <T> t)
+{
+    for (int i = 0; i < t.size(); i++)
+    {
+        cout << t[i]<<' ';
+    }
+    cout << endl;
+    return;
+}
+
+struct node
+{
+    int id;
+    int data;
+};
+
+class graph
+{
+protected:
+    vector <node> n;
+    vector <pair<int,int>> CSR;
+    vector <int> CSR_n;
+    int cn;
+    //int& nc;
+
+public:
+
+    graph()
+    {
+        n = {};
+        CSR = {};
+        CSR_n = {};
+        cn = 0;
+        //nc = cn;
+    }
+
+    vector<node> get_n() { return(n); }
+    vector <pair<int, int>> get_CSR() { return(CSR); }
+    vector <int> get_CSR_n() { return(CSR_n); }
+    int get_cn() { return(cn); }
+
+    void add_node()
+    {
+        cn++;
+        node temp;
+        cin >> temp.id;
+        temp.data = -1;
+        n.push_back(temp);
+        //CSR_n.push_back(-1);
+        return;
+    }
+
+    void characterise()
+    {
+        int t,d;
+        for (int i = 0; i < cn; i++)
+        {
+            CSR_n.push_back(CSR.size());
+            for (cin >> t; t > 0 && t <= cn; cin >> t)
+            {
+                cin >> d;
+                CSR.push_back(make_pair(t, d));
+            }
+        }
+        CSR_n.push_back(CSR.size());
+        return;
+    }
+
+    void display_graph()
+    {
+        for (int i = 0; i < cn; i++)
+        {
+            cout << i + 1 << ' ';
+            /*if (i == cn - 1)
+                for (int j = CSR_n[i]; j < CSR.size(); j++) cout << CSR[j].first << ' ';
+            else*/
+            for (int j = CSR_n[i]; j < CSR_n[i + 1]; j++) cout << CSR[j].first << ' ';
+            cout << endl;
+        }
+    }
+
+    vector<int> least(int s)
+    {
+        queue <int> order;
+        vector <int> ld;
+        for (int i = 0; i < cn + 1; i++) ld.push_back(-1);
+        order.push(s);
+        ld[s] = 0;
+
+        while (!order.empty())
+        {
+            int temp = order.front();
+            for (int i = CSR_n[temp - 1]; i < CSR_n[temp]; i++)
+            {
+                if (ld[CSR[i].first] != -1)
+                {
+                    if (ld[CSR[i].first] > ld[temp] + CSR[i].second)
+                    {
+                        ld[CSR[i].first] = ld[temp] + CSR[i].second;
+                    }
+                }
+                else
+                {
+                    ld[CSR[i].first] = ld[temp] + CSR[i].second;
+                    order.push(CSR[i].first);
+                }
+            }
+            order.pop();
+        }
+        display1(ld);
+        return(ld);
+    }
+
+    int least_dist(int s, int t)
+    {
+        vector <int> ld = least(s);
+        return(ld[t]);
+    }
+
+    int island_count()
+    {
+        int count = 1;
+        queue <int> order;
+        vector <bool> vis(cn + 2, false);
+        order.push(1);
+        int check = 2;
+        while (check < cn)// && vis[check])
+        {
+            int temp = order.front();
+            for (int i = CSR_n[temp-1]; i < CSR_n[temp]; i++)
+            {
+                if (!vis[CSR[i].first])
+                {
+                    order.push(CSR[i].first);
+                    vis[CSR[i].first] = true;
+                }
+            }
+            order.pop();
+            for (; vis[check]; check++);
+            if (order.empty())
+            {
+                count++;
+                if (check <= cn)
+                    order.push(check);
+            }
+        }
+        return (count);
+    }
+
+    bool is_loop()
+    {
+        vector <bool> vis(cn + 2, false);
+        queue <int> order;
+        order.push(1);
+        bool res = false;
+        int check = 2;
+
+        while (!order.empty())
+        {
+            int ch = 0;
+            vis[order.front()] = true;
+            for (int i = CSR_n[order.front() - 1]; i < CSR_n[order.front()]; i++)
+            {
+                if (vis[CSR[i].first])
+                {
+                    ch++;
+                    if (ch == 2) return (true);
+                }
+                else (order.push(CSR[i].first));
+            }
+            order.pop();
+            for (; vis[check]; check++);
+            if (order.empty())
+            {
+                if (check <= cn)
+                    order.push(check);
+            }
+        }
+        return(false);
+    }
+
+    /*vector <vector <int>> shortest_path(int s, int t, vector <int> ld)
+    {
+        vector <int> ld = least(s);
+        vector <vector<int>> res = {};
+
+    }*/
+
+};
+
+class BFS: public graph
+{
+    int source;
+    vector <int> ld;
+public:
+    BFS(graph g, int s)
+    {
+        source = s;
+        this->n = g.get_n();
+        this->cn = g.get_cn();
+        this->CSR = g.get_CSR();
+        this->CSR_n = g.get_CSR_n();
+        ld = g.least(s);
+    }
+
+    vector <int> shortest_path (int t)
+    {
+        vector <bool> vis(cn+1, false);
+        vector <int> res;                               // vector <vector<int>> res; 
+        res.push_back(t);
+        int temp = t;
+
+        while (temp != source)
+        {
+            vis[temp] = true;
+            //cout << "<<<<" << '\n';
+            //display1(res);
+            for (int i = CSR_n[temp - 1]; i < CSR_n[temp]; i++)
+            {
+                //cout << temp << '\n';
+                if (ld[temp] - ld[CSR[i].first] == CSR[i].second && !vis[CSR[i].first])
+                {
+                    temp = CSR[i].first;
+                    res.push_back(temp);
+                }
+            }
+        }
+        return(res);
+    }
+};
+
+int main()
+{
+    graph g;
+    int n;
+    cin >> n;
+    for (int i = 0; i < n; i++) g.add_node();
+    g.characterise();
+    //g.display_graph();
+    //cout << g.least_dist(4, 2);
+    //BFS b4 (g, 4);
+    //display1(b4.shortest_path(2));
+    if (g.is_loop()) cout << "looped\n";
+    else cout << "not looped";
+
+    return(0);
+}
+
+/*
+
+vector <bool> vis (n+1,false);
+
+INPUT 1:
+4
+1 2 3 4
+2 2
+3 3 
+4 4 
+-1
+1 2
+3 3
+-1
+1 3 
+2 3
+-1
+1 4
+-1
+
+INPUT 2:
+
+15 
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 
+2 3 
+5 5 
+-1 
+1 3 
+3 8 
+-1
+2 8 
+4 4 
+6 7 
+-1 
+3 4 
+5 2 
+12 11 
+-1
+1 5 
+4 2 
+-1
+3 7 
+7 6 
+9 1 
+-1
+6 6 
+8 2 
+9 9 
+-1
+7 2 
+-1
+6 1 
+7 9 
+10 12 
+12 8 
+-1
+9 12 
+11 10 
+-1
+10 7 
+-1
+4 11 
+9 8 
+13 1 
+-1
+14 2 
+15 4 
+-1
+13 2 
+-1
+13 4 
+-1
+
+INPUT 3:
+11
+1 2 3 4 5 6 7 8 9 10 11 
+3 1 
+4 1 
+-1
+3 1 
+4 1 
+-1
+1 1 
+2 1 
+4 1 
+-1
+1 1 
+2 1 
+3 1 
+-1
+6 1 
+7 1 
+-1
+5 1 
+7 1 
+-1
+5 1 
+6 1 
+-1
+9 1 
+10 1 
+11 1 
+-1
+8 1
+10 1
+11 1
+-1
+9 1
+8 1
+-1
+8 1 
+9 1 
+-1
+
+INPUT 4:
+12 
+1 2 3 4 5 6 7 8 9 10 11 12 
+2 1 
+4 1 
+-1
+3 1 
+5 1 
+11 1 
+-1
+2 1 
+9 1 
+-1
+1 1 
+6 1 
+7 1 
+8 1 
+-1
+2 1 
+12 1 
+-1
+4 1 
+-1
+4 1 
+-1
+4 1 
+-1
+3 1 
+10 1 
+-1
+9 1 
+-1
+2 1 
+-1 
+5 1 
+-1
+
+
+*/
