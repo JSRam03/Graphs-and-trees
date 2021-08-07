@@ -1,0 +1,295 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <time.h>
+using namespace std;
+
+int t = 0;
+
+class grid
+{
+    vector <vector <bool>> g;
+    vector <vector <char>> ch;
+    int size;
+    vector <vector<int>> sln;
+
+public:
+
+    void print_g()
+    {
+        for (int i = 0; i < g.size(); i++)
+        {
+            for (int j = 0; j < g[i].size(); j++)
+                cout << g[i][j] << ' ';
+            cout << endl;
+        }
+        cout << endl;
+        return;
+    }
+
+    grid(int n)
+    {
+        size = n;
+        for (int i = 0; i < n; i++)
+        {
+            sln.push_back({});
+            g.push_back({});
+            for (int j = 0; j < n; j++)
+            {
+                g[i].push_back(false);
+                sln[i].push_back(-1);
+            }
+            ch.push_back({});
+            ch.push_back({});
+            for (int j = 0; j < 2*n+1; j++)
+            {
+                if (j % 2 == 0)
+                {
+                    ch[2 * i].push_back('+');
+                    ch[2 * i + 1].push_back('|');
+                }
+                else
+                {
+                    ch[2 * i].push_back('-');
+                    ch[2 * i + 1].push_back(' ');
+                }
+            }
+        }
+        vector <bool> vec(n, false);
+        g.push_back(vec);
+
+        for (int i = 0; i < g.size(); i++) g[i].push_back(0);
+
+        ch.push_back({});
+        for (int j = 0; j < 2*n+1; j++)
+            if (j % 2 == 0) ch[2 * n].push_back('+');
+            else ch[2 * n].push_back('-');
+    }
+
+    void increment(int& n1, int& n2)
+    {
+        //cout << n1 << ' ' << n2 << endl;
+        if ((++n1) == size)
+        {
+            n1 = 0;
+            n2++;
+        }
+        return;
+    }
+
+    void display()
+    {
+        for (int i = 0; i < ch.size(); i++)
+        {
+            for (int j = 0; j < ch[i].size(); j++)
+                if (ch[i][j] == '-') cout << "---";
+                else if (ch[i][j] == ' ') cout << "   ";
+                else if (ch[i][j] == '|')cout << '|';
+                else if (ch[i][j] == 0)cout << ' ';
+                else if (ch[i][j] == '+') cout << '+';
+                else cout << ' ' << ch[i][j] << ' ';
+            cout << endl;
+        }
+        return;
+    }
+
+    void Aldous_Broder()
+    {
+        srand(time(0));
+        /*int xy[2];
+        xy[0] = rand() % size;
+        xy[1] = rand() % size;
+
+        g[xy[0]][xy[1]] = true;*/
+
+        int x = rand() % size;
+        int y = rand() % size;
+
+        g[x][y] = true;
+
+        int r1, r2;
+        int ch1, ch2;
+        ch1 = ch2 = 0;
+        bool chk = false;
+        //cout << x << ' ' << y << endl;
+        while (ch2 < size)
+        //while (!chk)
+        //while (t<150)
+        {
+            r1 = rand() % 2;
+            r2 = rand() % 2;
+
+            if (r1)
+            {
+                if (x == 0)
+                {
+                    if (!g[x + 1][y])
+                    {
+                        g[x + 1][y] = true;
+                        ch[2 * x + 2][2 * y + 1] = 32;
+                    }
+                    x++;
+                }
+                else if (x == size - 1)
+                {
+                    if (!g[x - 1][y])
+                    {
+                        g[x - 1][y] = true;
+                        ch[2 * x][2 * y + 1] = 32;
+                    }
+                    x--;
+                }
+                else if (r2)
+                {
+                    if (!g[x + 1][y])
+                    {
+                        g[x + 1][y] = true;
+                        ch[2 * x + 2][2 * y + 1] = 32;
+                    }
+                    x++;
+                }
+                else
+                {
+                    if (!g[x - 1][y])
+                    {
+                        g[x - 1][y] = true;
+                        ch[2 * x][2 * y + 1] = 32;
+                    }
+                    x--;
+                }
+            }
+
+            else
+            {
+                if (y == 0)
+                {
+                    if (!g[x][y + 1])
+                    {
+                        g[x][y + 1] = true;
+                        ch[2 * x + 1][2 * y + 2] = 0;
+                    }
+                    y++;
+                }
+                else if (y == size - 1)
+                {
+                    if (!g[x][y - 1])
+                    {
+                        g[x][y - 1] = true;
+                        ch[2 * x + 1][2 * y] = 0;
+                    }
+                    y--;
+                }
+                else if (r2)
+                {
+                    if (!g[x][y + 1])
+                    {
+                        g[x][y + 1] = true;
+                        ch[2 * x + 1][2 * y + 2] = 0;
+                    }
+                    y++;
+                }
+                else
+                {
+                    if (!g[x][y - 1])
+                    {
+                        g[x][y - 1] = true;
+                        ch[2 * x + 1][2 * y] = 0;
+                    }
+                    y--;
+                }
+            }
+            //cout << x << ' ' << y << endl;
+            //for (int i = 0; i < size-1; i++) for (int j = 0; j < size-1; j++) chk = chk * g[i][j];
+            //cout << x << ' ' << y << endl;
+            for (; g[ch1][ch2]; increment(ch1, ch2));
+            t++;
+            //if (t % 100 == 0) print_g();
+        }
+        return;
+    }
+
+    void solve()
+    {
+        vector <vector <bool>> vis;
+        for (int i = 0; i < size; i++)
+        {
+            vis.push_back({});
+            for (int j=0; j<size; j++)
+                vis[i].push_back(false);
+        }
+        queue <int> order;
+        order.push(0);
+        vis[0][0] = true;
+        while (!order.empty())
+        {
+            int x = order.front() % size;
+            int y = order.front() / size;
+            vis[x][y] = true;
+            if (ch[2 * x + 1][2 * y + 2] == ' ' || ch[2 * x + 1][2 * y + 2] == 0)
+            {
+                if (!vis[x][y + 1])
+                {
+                    order.push(size * (y + 1) + x);
+                    sln[x][y + 1] = order.front();
+                }
+            }
+
+            if (ch[2 * x + 2][2 * y + 1] == ' ' || ch[2 * x + 2][2 * y + 1] == 0)
+            {
+                if (!vis[x + 1][y])
+                {
+                    order.push(size * y + x + 1);
+                    sln[x + 1][y] = order.front();
+                }
+            }
+
+            if (ch[2 * x + 1][2 * y] == ' ' || ch[2 * x + 1][2 * y] == 0)
+            {
+                if (!vis[x][y - 1])
+                {
+                    order.push(size * (y - 1) + x);
+                    sln[x][y - 1] = order.front();
+                }
+            }
+
+            if (ch[2 * x][2 * y + 1] == ' ' || ch[2 * x][2 * y + 1] == 0)
+            {
+                if (!vis[x - 1][y])
+                {
+                    order.push(size * y + x - 1);
+                    sln[x - 1][y] = order.front();
+                }
+            }
+
+            order.pop();
+        }
+
+        int temp = (size - 1) * size + size - 1;
+        while (temp != 0)
+        {
+            int x = temp % size;
+            int y = temp / size;
+            ch[2 * x + 1][2 * y + 1] = 'o';
+            temp = sln[x][y];
+        }
+        ch[1][1] = 'o';
+    }
+};
+
+int main()
+{
+    int n;
+    cin >> n;
+    char ch;
+    grid g1(n);
+    //g1.display();
+    g1.Aldous_Broder();
+    //g1.print_g();
+    g1.display();
+    cout << endl;
+    //g1.print_g();
+    cin >> ch;
+    g1.solve();
+    g1.display();
+    return(0);
+}
