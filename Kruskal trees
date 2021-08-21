@@ -1,0 +1,185 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+void display_vpii(vector <pair<int, int>> vec)
+{
+    for (int i = 0; i < vec.size(); i++)
+    {
+        cout << vec[i].first << ' ' << vec[i].second << '\n';
+    }
+    cout << endl;
+    return;
+}
+
+class set
+{
+    int n;
+    vector <int> sets;
+
+public:
+    set(int size)
+    {
+        n = size;
+        for (int i = 0; i < n; i++) sets.push_back(-1);
+    }
+
+    int s_find(int node)
+    {
+        if (sets[node - 1] == -1) return(node);
+        else return (s_find(sets[node - 1]));
+    }
+
+    void s_union(int n1, int n2)
+    {
+        n1 = s_find(n1);
+        n2 = s_find(n2);
+        sets[n2 - 1] = n1;
+        return;
+    }
+};
+
+class graph
+{
+    int n;
+    vector <int> CSR_n;
+    vector <pair<int, int>> CSR;
+
+public:
+    graph(int size)
+    {
+        int temp,dist;
+        n = size;
+        for (int i = 0; i < n; i++)
+        {
+            CSR_n.push_back(CSR.size());
+            for (cin >> temp; temp > 0 && temp <= n; cin >> temp)
+            {
+                cin >> dist;
+                CSR.push_back(make_pair(temp, dist));
+            }
+            //cout << "next";
+        }
+    }
+
+    int edge(int index)
+    {
+        for (int i = 0; i < CSR_n.size(); i++)
+        {
+            if (CSR_n[i] > index) return(i);
+            if (CSR_n[i] == index) return i + 1;
+        }
+        cout<<"error";
+        return(-1);
+    }
+
+    vector <pair<int, int>> order()
+    {
+        vector <pair<int, int>> res;
+        for (int i = 0; i < CSR.size(); i++)
+            res.push_back (make_pair (CSR[i].second, i));
+        sort (res.begin (),res.end ());
+        return (res);
+    }
+
+    vector <pair<int,int>> kruskal ()
+    {
+        vector <pair<int, int>> res;
+        set s(n);
+        int count = n;
+        vector <pair <int, int>> vec = order();
+
+        for(int i = 0; i < vec.size(); i++)
+        {
+            if (s.s_find(CSR[vec[i].second].first) == s.s_find(edge(vec[i].second))) continue;
+            else
+            {
+                s.s_union(CSR[vec[i].second].first, edge(vec[i].second));
+                res.push_back(make_pair(CSR[vec[i].second].first, edge(vec[i].second)));
+            }
+        }
+
+        return(res);
+    }
+
+};
+
+int main()
+{
+    int n;
+    cin >> n;
+    graph g1(n);
+    cout << endl << "Result" << endl;
+    display_vpii(g1.kruskal());
+    return(0);
+}
+
+/*
+
+4
+2 2
+3 3
+4 4
+-1
+1 2
+3 3
+-1
+1 3
+2 3
+-1
+1 4
+-1
+
+
+INPUT 2:
+15
+2 3
+5 5
+-1
+1 3
+3 8
+-1
+2 8
+4 4
+6 7
+-1
+3 4
+5 2
+12 11
+-1
+1 5
+4 2
+-1
+3 7
+7 6
+9 1
+-1
+6 6
+8 2
+9 9
+-1
+7 2
+-1
+6 1
+7 9
+10 12
+12 8
+-1
+9 12
+11 10
+-1
+10 7
+-1
+4 11
+9 8
+13 1
+-1
+14 2
+15 4
+-1
+13 2
+-1
+13 4
+-1
+*/
